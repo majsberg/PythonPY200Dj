@@ -4,6 +4,7 @@ from .views import template_view, index_view, login_view, register_view, \
 
 app_name = 'app'
 
+
 urlpatterns = [
     path('', index_view, name='index'),
     path('template/', template_view, name='template'),
