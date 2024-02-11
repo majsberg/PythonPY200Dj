@@ -5,6 +5,64 @@ from django.shortcuts import redirect
 from django.contrib.auth import login, logout, authenticate
 from .forms import TemplateForm, CustomUserCreationForm
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.views import View
+from django.views.generic import TemplateView
+from django.views.generic import FormView
+from django.contrib.auth.views import LoginView
+
+
+class MyFormView(FormView):
+    template_name = 'app/template_form.html'  # Шаблон который будет рендерится
+    form_class = TemplateForm  # Класс формы который будет валидироваться
+    success_url = '/'  # Ссылка для перехода при удачной валидации
+
+    def form_valid(self, form):
+        return JsonResponse(form.cleaned_data)
+
+
+class MyTemplView(TemplateView):
+    template_name = 'app/template_form.html'
+
+    def post(self, request, *args, **kwargs):
+        received_data = request.POST  # Приняли данные в словарь
+        form = TemplateForm(received_data)  # Передали данные в форму
+        if form.is_valid():  # Проверили, что данные все валидные
+            my_text = form.cleaned_data.get("my_text")  # Получили очищенные данные
+            my_select = form.cleaned_data.get("my_select")
+            my_textarea = form.cleaned_data.get("my_textarea")
+            my_password = form.cleaned_data.get("my_password")
+            my_email = form.cleaned_data.get("my_email")
+            my_date = form.cleaned_data.get("my_date")
+            my_number = form.cleaned_data.get("my_number")
+            my_checkbox = form.cleaned_data.get("my_checkbox")
+            return JsonResponse(form.cleaned_data, json_dumps_params={'ensure_ascii': False,
+                                                                      'indent': 4})
+
+        context = self.get_context_data(**kwargs)
+        context['form'] = form
+        return self.render_to_response(context)
+
+
+class TemplView(View):
+    def get(self, request):
+        return render(request, 'app/template_form.html')
+
+    def post(self, request):
+        received_data = request.POST  # Приняли данные в словарь
+        form = TemplateForm(received_data)  # Передали данные в форму
+        if form.is_valid():  # Проверили, что данные все валидные
+            my_text = form.cleaned_data.get("my_text")  # Получили очищенные данные
+            my_select = form.cleaned_data.get("my_select")
+            my_textarea = form.cleaned_data.get("my_textarea")
+            my_password = form.cleaned_data.get("my_password")
+            my_email = form.cleaned_data.get("my_email")
+            my_date = form.cleaned_data.get("my_date")
+            my_number = form.cleaned_data.get("my_number")
+            my_checkbox = form.cleaned_data.get("my_checkbox")
+            return JsonResponse(form.cleaned_data, json_dumps_params={'ensure_ascii': False,
+                                                                      'indent': 4})
+
+        return render(request, 'app/template_form.html', context={"form": form})
 
 
 def template_view(request):
@@ -40,7 +98,7 @@ def template_view(request):
             my_checkbox = form.cleaned_data.get("my_checkbox")
             # TODO Получите остальные данные из формы и сделайте необходимые обработки (если они нужны)
             return JsonResponse(form.cleaned_data, json_dumps_params=
-                                {'ensure_ascii': False, 'indent': 4})
+            {'ensure_ascii': False, 'indent': 4})
             # TODO Верните HttpRequest или JsonResponse с данными
 
         return render(request, 'app/template_form.html', context={"form": form})
@@ -51,6 +109,13 @@ def template_view(request):
         # TODO Проведите здесь получение и обработку данных если это необходимо
 
         # TODO Верните HttpRequest или JsonResponse с данными
+
+
+class MyLoginView(LoginView):
+    template_name = 'app/login.html'
+    redirect_authenticated_user = True  # Данный флаг не позволит авторизированному
+    # пользователю зайти на страницу с авторизацией и сразу его перенаправит на
+    # ссылку редиректа. По умолчанию redirect_authenticated_user = False
 
 
 def login_view(request):
@@ -72,6 +137,7 @@ def login_view(request):
             login(request, user)
             return redirect("app:user_profile")
         return render(request, "app/login.html", context={"form": form})
+
 
 def logout_view(request):
     if request.method == "GET":
@@ -106,6 +172,7 @@ def index_view(request):
 def user_detail_view(request):
     if request.method == "GET":
         return render(request, 'app/user_details.html')
+
 
 def get_text_json(request):
     if request.method == "GET":
